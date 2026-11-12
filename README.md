@@ -1,5 +1,5 @@
 # Índice invertido para busca textual
-
+Aluno — Willyan Wallace dos Santos Barros
 Mini-projeto de Estruturas de Dados do IFAL Maceió.
 
 O programa busca palavras em um arquivo de texto e mostra os números das linhas em que elas aparecem. O índice é um dicionário que guarda um conjunto de linhas para cada palavra.
