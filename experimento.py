@@ -28,7 +28,7 @@ CONSULTAS = (
     ("ou", ("índice", "programação", "java")),
 )
 
-BUSCAS = {"simples": buscar, "e": buscar_e, "ou": buscar_ou}
+BUSCAS_COMBINADAS = {"e": buscar_e, "ou": buscar_ou}
 REPETICOES = 3
 
 
@@ -42,7 +42,16 @@ def gerar_texto(quantidade):
 
 def buscar_varredura(texto, consulta):
     tipo, palavras = consulta
-    termos = set(palavras)
+    termos = set()
+    for palavra in palavras:
+        partes = separar_palavras(palavra)
+        if len(partes) == 1:
+            termos.add(partes[0])
+        elif tipo != "ou":
+            return []
+    if not termos:
+        return []
+
     linhas = []
 
     for numero, linha in enumerate(texto.splitlines(), start=1):
@@ -63,7 +72,7 @@ def buscar_com_indice(indice, consulta):
     tipo, palavras = consulta
     if tipo == "simples":
         return buscar(indice, palavras[0])
-    return BUSCAS[tipo](indice, palavras)
+    return BUSCAS_COMBINADAS[tipo](indice, palavras)
 
 
 def executar_buscas(busca, fonte, consultas):
@@ -77,19 +86,22 @@ def medir_ms(funcao, *argumentos):
     return (perf_counter() - inicio) * 1000
 
 
-def construir_e_buscar(texto, consultas):
+def medir_construcao_e_buscas(texto, consultas):
+    inicio = perf_counter()
     indice = construir_indice(texto)
     executar_buscas(buscar_com_indice, indice, consultas)
+    return (perf_counter() - inicio) * 1000
 
 
 def executar_experimento(texto):
     consultas = [CONSULTAS[i % len(CONSULTAS)] for i in range(1000)]
+    inicio = perf_counter()
     indice = construir_indice(texto)
+    construcao = (perf_counter() - inicio) * 1000
     for consulta in CONSULTAS:
         if buscar_com_indice(indice, consulta) != buscar_varredura(texto, consulta):
             raise ValueError(f"As estratégias discordaram na consulta {consulta!r}")
 
-    construcao = medir_ms(construir_indice, texto)
     varredura = medir_ms(executar_buscas, buscar_varredura, texto, consultas)
     indexadas = medir_ms(executar_buscas, buscar_com_indice, indice, consultas)
 
@@ -100,7 +112,7 @@ def executar_experimento(texto):
         tempos_indice = []
         for _ in range(REPETICOES):
             tempos_varredura.append(medir_ms(executar_buscas, buscar_varredura, texto, lote))
-            tempos_indice.append(medir_ms(construir_e_buscar, texto, lote))
+            tempos_indice.append(medir_construcao_e_buscas(texto, lote))
         totais.append((quantidade, median(tempos_varredura), median(tempos_indice)))
 
     print(f"Python {platform.python_version()} | {platform.system()} | {len(texto.splitlines())} linhas")
