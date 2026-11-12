@@ -1,0 +1,5 @@
+Python é uma linguagem de programação.
+Estruturas de dados são fundamentais.
+Python possui diversas estruturas de dados.
+Algoritmos utilizam boas estruturas.
+Programação em Python é interessante.
